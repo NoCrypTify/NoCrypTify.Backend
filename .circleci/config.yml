@@ -11,13 +11,13 @@ commands:
       - run:
           name: Notify on failure
           when: on_fail
-          command: |
-                    if [ -n "$DISCORD_WEBHOOK" ]; then
-                    curl -H "Content-Type: application/json" \
-                        -X POST \
-                        -d "{\\"content\\": \\"<@&1522971188668928080> ❌ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** failed in job ${CIRCLE_JOB} on branch **${CIRCLE_BRANCH}**!\\\\nDetails: ${CIRCLE_BUILD_URL}\\"}" \
-                        "$DISCORD_WEBHOOK"
-                    fi
+      command: |
+        if [ -n "$DISCORD_WEBHOOK" ]; then
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d "{\"content\": \"<@&1522971188668928080> ❌ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** failed in job ${CIRCLE_JOB} on branch **${CIRCLE_BRANCH}**!\\nDetails: ${CIRCLE_BUILD_URL}\"}" \
+            "$DISCORD_WEBHOOK"
+        fi
 
 jobs:
   snyk:
@@ -27,10 +27,6 @@ jobs:
       - checkout
       - node/install-packages
       - snyk/scan
-      - run:
-          name: Fail
-          command: |
-            exit 1
       - notify_on_fail
 
   sonar:
