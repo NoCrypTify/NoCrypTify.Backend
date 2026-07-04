@@ -83,7 +83,7 @@ workflows:
       - docker/publish:
           deploy: false
           image: $DOCKER_LOGIN/nocryptify_backend
-        post-steps:
+          post-steps:
             - notify_on_fail
 
   deploy:
