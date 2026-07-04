@@ -6,4 +6,14 @@ module.exports = {
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
+  reporters: [
+    'default',
+    [
+      'jest-junit',
+      {
+        outputDirectory: './test-results',
+        outputName: 'junit.xml',
+      },
+    ],
+  ],
 };
