@@ -25,9 +25,8 @@ jobs:
           name: SonarQube scan
           command: sonar-scanner
           environment:
-            SONAR_HOST_URL: ${SONAR_HOST_URL}
-            SONAR_TOKEN: ${SONAR_TOKEN}
-            SONAR_SCANNER_OPTS: "-Dsonar.projectKey=secret-notes-backend"
+            SONAR_HOST_URL: $SONAR_HOST_URL
+            SONAR_TOKEN: $SONAR_TOKEN
 
   deploy:
     executor: node
