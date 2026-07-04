@@ -1,6 +1,6 @@
 version: 2.1
 
-# Branch behavior (spec §3):
+# Branch behavior (spec 3):
 #   push to main              -> lint, test, build
 #   push to deploy/production -> lint, test, build, deliver, deploy, e2e
 #
@@ -56,7 +56,7 @@ jobs:
       - run:
           name: Run Jest suite
           command: |
-            # TODO §3: add Jest config + >=10 tests (deferred on purpose).
+            # TODO 3: add Jest config + >=10 tests (deferred on purpose).
             npm test -- --coverage
       - store_test_results:
           path: coverage
@@ -99,7 +99,7 @@ jobs:
       - checkout
       - run:
           name: Deploy to staging (Blue/Green)
-          command: echo "TODO §8: provision AWS EC2 staging + RDS + blue/green swap script."
+          command: echo "TODO 8 provision AWS EC2 staging + RDS + blue/green swap script."
       - notify_on_fail
 
   e2e:
