@@ -57,7 +57,8 @@ workflows:
     jobs: 
       - snyk
       - sonar
-      - node/test
+      - node/test:
+          test-results-for: jest
       - docker/publish:
           deploy: false
           image: $DOCKER_LOGIN/nocryptify_backend
@@ -68,7 +69,8 @@ workflows:
     jobs:
       - snyk
       - sonar
-      - node/test
+      - node/test:
+          test-results-for: jest
       - docker/publish:
           image: $DOCKER_LOGIN/$nocryptify_backend
           requires:
