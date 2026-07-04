@@ -33,10 +33,13 @@ jobs:
           at: .
       - run:
           name: SonarQube scan
-          command: sonar-scanner
+          command: |
+            echo "$SONAR_HOST_URL"
+            echo "$SONAR_TOKEN"
+            sonar-scanner
           environment:
-            SONAR_HOST_URL: $SONAR_HOST_URL
-            SONAR_TOKEN: $SONAR_TOKEN
+            SONAR_HOST_URL: "$SONAR_HOST_URL"
+            SONAR_TOKEN: "$SONAR_TOKEN"
       - notify_on_fail
 
   deploy:
