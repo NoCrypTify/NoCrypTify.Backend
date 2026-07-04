@@ -40,7 +40,8 @@ jobs:
       - notify_on_fail
 
   deploy:
-    executor: node
+    docker:
+      - image: cimg/base:stable
     steps:
       - checkout
       - run:
@@ -49,7 +50,8 @@ jobs:
       - notify_on_fail
 
   e2e:
-    executor: node
+    docker:
+      - image: cimg/base:stable
     steps:
       - checkout
       - run:
