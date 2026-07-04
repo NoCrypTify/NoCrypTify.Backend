@@ -60,7 +60,7 @@ workflows:
       - node/test
       - docker/publish:
           deploy: false
-          image: $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME
+          image: $DOCKER_LOGIN/nocryptify_backend
 
   deploy:
     when:
@@ -70,7 +70,7 @@ workflows:
       - sonar
       - node/test
       - docker/publish:
-          image: $DOCKER_LOGIN/$CIRCLE_PROJECT_REPONAME
+          image: $DOCKER_LOGIN/$nocryptify_backend
           requires:
             - snyk
             - sonar
