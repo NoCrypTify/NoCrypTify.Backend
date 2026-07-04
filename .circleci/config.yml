@@ -5,6 +5,20 @@ orbs:
   node: circleci/node@7.2.1
   docker: circleci/docker@4.0.1
 
+commands:
+  notify_on_fail:
+    steps:
+      - run:
+          name: Notify on failure
+          when: on_fail
+          command: |
+                    if [ -n "$DISCORD_WEBHOOK" ]; then
+                    curl -H "Content-Type: application/json" \
+                        -X POST \
+                        -d "{\\"content\\": \\"<@&1522971188668928080> ❌ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** failed in job ${CIRCLE_JOB} on branch **${CIRCLE_BRANCH}**!\\\\nDetails: ${CIRCLE_BUILD_URL}\\"}" \
+                        "$DISCORD_WEBHOOK"
+                    fi
+
 jobs:
   snyk:
     docker:
@@ -13,6 +27,11 @@ jobs:
       - checkout
       - node/install-packages
       - snyk/scan
+      - run:
+          name: Fail
+          command: |
+            exit 1
+      - notify_on_fail
 
   sonar:
     docker:
@@ -27,6 +46,7 @@ jobs:
           environment:
             SONAR_HOST_URL: $SONAR_HOST_URL
             SONAR_TOKEN: $SONAR_TOKEN
+      - notify_on_fail
 
   deploy:
     executor: node
@@ -58,9 +78,13 @@ workflows:
       - sonar
       - node/test:
           test-results-for: jest
+          post-steps:
+            - notify_on_fail
       - docker/publish:
           deploy: false
           image: $DOCKER_LOGIN/nocryptify_backend
+        post-steps:
+            - notify_on_fail
 
   deploy:
     when:
@@ -70,8 +94,12 @@ workflows:
       - sonar
       - node/test:
           test-results-for: jest
+          post-steps:
+            - notify_on_fail
       - docker/publish:
-          image: $DOCKER_LOGIN/$nocryptify_backend
+          image: $DOCKER_LOGIN/nocryptify_backend
+          post-steps:
+            - notify_on_fail
           requires:
             - snyk
             - sonar
