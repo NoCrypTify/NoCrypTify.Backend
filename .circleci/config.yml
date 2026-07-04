@@ -1,13 +1,7 @@
 version: 2.1
 
-# Branch behavior (spec 3):
-#   push to main              -> lint, test, build
-#   push to deploy/production -> lint, test, build, deliver, deploy, e2e
-#
-# Required env vars (Project Settings -> Environment Variables):
-#   SNYK_TOKEN, SONAR_HOST_URL, SONAR_TOKEN,
-#   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN,
-#   SLACK_WEBHOOK_URL (optional)
+orbs:
+  snyk: snyk/snyk@2.3.0
 
 commands:
   notify_on_fail:
@@ -32,11 +26,7 @@ jobs:
     executor: node
     steps:
       - checkout
-      - run:
-          name: Snyk dependency scan
-          command: |
-            npx snyk auth "$SNYK_TOKEN"
-            npx snyk test --severity-threshold=high
+      - snyk/scan
       - setup_remote_docker
       - run:
           name: SonarQube scan
