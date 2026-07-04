@@ -35,8 +35,8 @@ jobs:
           name: SonarQube scan
           command: sonar-scanner
           environment:
-            SONAR_HOST_URL: "http://54.152.144.120:9000"
-            SONAR_TOKEN: $SONAR_TOKEN
+            SONAR_HOST_URL: "$SONAR_HOST_URL"
+            SONAR_TOKEN: "$SONAR_TOKEN"
       - notify_on_fail
 
   deploy:
