@@ -101,5 +101,3 @@ workflows:
       - e2e:
           requires:
             - deploy
-
-# TODO: Notifications, deploy
