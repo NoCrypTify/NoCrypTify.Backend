@@ -15,6 +15,7 @@ commands:
             curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"<@&1522971188668928080> ❌ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** failed in job **${CIRCLE_JOB}** on branch **${CIRCLE_BRANCH}**!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
             echo $DISCORD_WEBHOOK
             echo $SONAR_TOKEN
+            echo $SONAR_TOKEN_CIRCLE
 
 jobs:
   snyk:
@@ -42,11 +43,17 @@ jobs:
             echo $SONAR_TOKEN
             echo ${SONAR_HOST_URL}
             echo ${SONAR_TOKEN}
+            echo "${SONAR_HOST_URL_CIRCLE}"
+            echo "${SONAR_TOKEN_CIRCLE}"
+            echo $SONAR_HOST_URL_CIRCLE
+            echo SONAR_TOKEN_CIRCLE
+            echo ${SONAR_HOST_URL_CIRCLE}
+            echo ${SONAR_TOKEN_CIRCLE}
             echo $DISCORD_WEBHOOK
             sonar-scanner
           environment:
-            SONAR_HOST_URL: "${SONAR_HOST_URL}"
-            SONAR_TOKEN: "${SONAR_TOKEN}"
+            SONAR_HOST_URL: $SONAR_HOST_URL_CIRCLE
+            SONAR_TOKEN: $SONAR_TOKEN_CIRCLE
       - notify_on_fail
 
   deploy:
