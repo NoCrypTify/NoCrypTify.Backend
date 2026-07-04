@@ -99,7 +99,7 @@ workflows:
             - node/test
       - deploy:
           requires:
-            - deliver
+            - docker/publish
       - e2e:
           requires:
             - deploy
