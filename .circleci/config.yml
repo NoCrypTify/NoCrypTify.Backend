@@ -36,24 +36,7 @@ jobs:
           at: .
       - run:
           name: SonarQube scan
-          command: |
-            echo "${SONAR_HOST_URL}"
-            echo "${SONAR_TOKEN}"
-            echo $SONAR_HOST_URL
-            echo $SONAR_TOKEN
-            echo ${SONAR_HOST_URL}
-            echo ${SONAR_TOKEN}
-            echo "${SONAR_HOST_URL_CIRCLE}"
-            echo "${SONAR_TOKEN_CIRCLE}"
-            echo $SONAR_HOST_URL_CIRCLE
-            echo SONAR_TOKEN_CIRCLE
-            echo ${SONAR_HOST_URL_CIRCLE}
-            echo ${SONAR_TOKEN_CIRCLE}
-            echo $DISCORD_WEBHOOK
-            sonar-scanner
-          environment:
-            SONAR_HOST_URL: $SONAR_HOST_URL_CIRCLE
-            SONAR_TOKEN: $SONAR_TOKEN_CIRCLE
+          command: sonar-scanner
       - notify_on_fail
 
   deploy:
