@@ -13,9 +13,6 @@ commands:
           when: on_fail
           command: |
             curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"<@&1522971188668928080> ❌ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** failed in job **${CIRCLE_JOB}** on branch **${CIRCLE_BRANCH}**!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
-            echo $DISCORD_WEBHOOK
-            echo $SONAR_TOKEN
-            echo $SONAR_TOKEN_CIRCLE
 
 jobs:
   snyk:
@@ -43,10 +40,13 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
-      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - SHA256:gg5cFYIlLTQ/DhKaMqSqyK2LqUv0lCo5oBlLhjSBW/4
       - run:
-          name: Deploy to staging (Blue/Green)
-          command: echo "TODO 8 provision AWS EC2 staging + RDS + blue/green swap script."
+          name: Pull docker image
+          command: docker pull if25b048/nocryptify_backend:staging
+      # Replace inactive deployment TODO
       - notify_on_fail
 
   e2e:
@@ -91,6 +91,7 @@ workflows:
             - notify_on_fail
       - docker/publish:
           image: $DOCKER_LOGIN/nocryptify_backend
+          tag: $CIRCLE_SHA1,staging
           post-steps:
             - notify_on_fail
           requires:
