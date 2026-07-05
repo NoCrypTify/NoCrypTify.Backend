@@ -14,6 +14,21 @@ commands:
           command: |
             curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"<@&1522971188668928080> ❌ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** failed in job **${CIRCLE_JOB}** on branch **${CIRCLE_BRANCH}**!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
 
+  get_deployment_colours:
+    steps:
+      - run:
+          name: Get Deployment Colour Variables
+          command: |
+            colour=$(ssh -o StrictHostKeyChecking=no ubuntu@${DEPLOYMENT_HOST} 'cat secret-notes/backend-prod.colour' | tr -d '\n')
+            if [ "$colour" = "green" ]; then
+                echo 'export PRODUCTION_COLOUR="green"' >> $BASH_ENV
+                echo 'export STAGING_COLOUR="blue"' >> $BASH_ENV
+            else
+                echo 'export PRODUCTION_COLOUR="blue"' >> $BASH_ENV
+                echo 'export STAGING_COLOUR="green"' >> $BASH_ENV
+            fi
+
+
 jobs:
   snyk:
     docker:
@@ -36,30 +51,84 @@ jobs:
           command: sonar-scanner
       - notify_on_fail
 
-  deploy:
+  deploy-staging:
     docker:
       - image: cimg/base:stable
     steps:
       - add_ssh_keys:
           fingerprints:
             - SHA256:gg5cFYIlLTQ/DhKaMqSqyK2LqUv0lCo5oBlLhjSBW/4
+      - get_deployment_colours
       - run:
-          name: Pull docker image
-          command: docker pull if25b048/nocryptify_backend:staging
-      # Replace inactive deployment TODO
+          name: Prepare new docker image
+          command: |
+            echo "${PRODUCTION_COLOUR}"
+            echo "${STAGING_COLOUR}"
+            ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
+              docker pull $DOCKER_LOGIN/nocryptify_backend:staging
+              docker rm -f "backend-$STAGING_COLOUR" >/dev/null 2>&1 || true
+            "
+
+      - run:
+          name: Run database migrations
+          command: |
+            ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
+              docker run --rm \
+              --network network \
+              --env-file ./secret-notes/.env \
+              $DOCKER_LOGIN/nocryptify_backend \
+              npm run migrate
+            "
+
+      - run:
+          name: Start new Container
+          command: |
+            ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
+              docker run -d \
+              --name "backend-$NEW_COLOR" \
+              --network network \
+              --env-file ./secret-notes/.env \
+              --restart unless-stopped \
+              $DOCKER_LOGIN/nocryptify_backend
+              echo "Waiting for health check"
+              for _ in {1..30}; do
+                status="$(docker inspect -f '{{.State.Health.Status}}' "backend-$NEW_COLOR" 2>/dev/null || echo none)"
+                [ "$status" = "healthy" ] && break
+                sleep 2
+              done
+              if [ "$(docker inspect -f '{{.State.Health.Status}}' "backend-$NEW_COLOR")" != "healthy" ]; then
+                echo "Health check failed" >&2
+                docker logs "backend-$NEW_COLOR"
+                docker rm -f "backend-$NEW_COLOR"
+                exit 1
+              fi
+            "
       - notify_on_fail
 
-  e2e:
+  smoke-tests:
     docker:
       - image: cimg/base:stable
     steps:
-      - checkout
+      - get_deployment_colours
       - run:
           name: E2E + performance against staging
           command: |
-            echo "TODO: run Playwright + k6 against the staging environment."
-            echo "On success, trigger the Blue/Green traffic switch from the Deploy stage."
+            echo "${PRODUCTION_COLOUR}"
+            echo "${STAGING_COLOUR}"
       - notify_on_fail
+
+  deploy-production:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - get:deployment_colours
+      - run:
+          name: Switch blue/green
+          # TODO
+          command: |
+            ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
+              exit 1
+            "
 
 workflows:
 
@@ -98,9 +167,12 @@ workflows:
             - snyk
             - sonar
             - node/test
-      - deploy:
+      - deploy-staging:
           requires:
             - docker/publish
-      - e2e:
+      - smoke-tests:
           requires:
             - deploy
+      - deploy-production:
+          requires:
+            - smoke-tests
