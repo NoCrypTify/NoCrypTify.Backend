@@ -72,13 +72,14 @@ jobs:
       - run:
           name: Run database migrations
           command: |
-            ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
-              docker run --rm \
-              --network network \
-              --env-file ./secret-notes/.env \
-              $DOCKER_LOGIN/nocryptify_backend \
-              npm run migrate
-            "
+            # ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
+            #   docker run --rm \
+            #   --network network \
+            #   --env-file ./secret-notes/.env \
+            #   $DOCKER_LOGIN/nocryptify_backend \
+            #   npm run migrate
+            # "
+            echo "TODO for later"
 
       - run:
           name: Start new Container
@@ -167,6 +168,20 @@ workflows:
             - snyk
             - sonar
             - node/test
+      - deploy-staging:
+          requires:
+            - docker/publish
+      - smoke-tests:
+          requires:
+            - deploy-staging
+      - deploy-production:
+          requires:
+            - smoke-tests
+
+  only-deploy:
+    when:
+      equal: ["deploy/tmp", << pipeline.git.branch >>]
+    jobs:
       - deploy-staging:
           requires:
             - docker/publish
