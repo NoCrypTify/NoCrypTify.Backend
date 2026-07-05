@@ -121,7 +121,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
-      - get:deployment_colours
+      - get_deployment_colours
       - run:
           name: Switch blue/green
           # TODO
@@ -172,7 +172,7 @@ workflows:
             - docker/publish
       - smoke-tests:
           requires:
-            - deploy
+            - deploy-staging
       - deploy-production:
           requires:
             - smoke-tests
