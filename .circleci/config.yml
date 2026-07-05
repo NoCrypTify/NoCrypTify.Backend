@@ -182,9 +182,7 @@ workflows:
     when:
       equal: ["deploy/tmp", << pipeline.git.branch >>]
     jobs:
-      - deploy-staging:
-          requires:
-            - docker/publish
+      - deploy-staging
       - smoke-tests:
           requires:
             - deploy-staging
