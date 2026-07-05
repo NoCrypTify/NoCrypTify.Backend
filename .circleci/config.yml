@@ -65,7 +65,7 @@ jobs:
             echo "${PRODUCTION_COLOUR}"
             echo "${STAGING_COLOUR}"
             ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
-              docker pull $DOCKER_LOGIN/nocryptify_backend:staging
+              docker pull $DOCKER_LOGIN/nocryptify_backend
               docker rm -f "backend-$STAGING_COLOUR" >/dev/null 2>&1 || true
             "
 
@@ -160,7 +160,7 @@ workflows:
             - notify_on_fail
       - docker/publish:
           image: $DOCKER_LOGIN/nocryptify_backend
-          tag: $CIRCLE_SHA1,staging
+          tag: $CIRCLE_SHA1,latest
           post-steps:
             - notify_on_fail
           requires:
