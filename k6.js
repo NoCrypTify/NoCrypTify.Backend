@@ -98,7 +98,7 @@ export default function () {
 function safeJson(response) {
   try {
     return response.json();
-  } catch {
+  } catch (e) {
     return null;
   }
 }
