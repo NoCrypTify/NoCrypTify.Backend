@@ -72,17 +72,6 @@ jobs:
               docker rm -f "backend-$STAGING_COLOUR" >/dev/null 2>&1 || true
             "
       - run:
-          name: Run database migrations
-          command: |
-            # ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
-            #   docker run --rm \
-            #   --network network \
-            #   --env-file ./secret-notes/.env \
-            #   $DOCKER_LOGIN/nocryptify_backend \
-            #   npm run migrate
-            # "
-            echo "TODO for later"
-      - run:
           name: Change Deployment Status to cancelled
           command: circleci run release update --status=CANCELED
           when: on_fail
