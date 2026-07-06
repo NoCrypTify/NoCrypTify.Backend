@@ -204,8 +204,8 @@ workflows:
           requires:
             - prepare-deployment
       - grafana/k6:
-          arguments: '--env BASE_URL=$STAGING_URL'
-          script: k6.js
+          arguments: '--env BASE_URL=${STAGING_URL}'
+          script: k6/notes-load-test.js
           requires:
             - deploy-staging
           post-steps:

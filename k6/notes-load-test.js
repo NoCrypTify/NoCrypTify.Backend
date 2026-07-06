@@ -14,7 +14,8 @@ import { Rate } from 'k6/metrics';
 //
 // Run:  k6 run -e API_BASE_URL=http://host:3001 k6/notes-load-test.js
 
-const BASE_URL = __ENV.API_BASE_URL || 'http://localhost:3000';
+// Accept API_BASE_URL (local / npm script) or BASE_URL (CircleCI grafana/k6 orb).
+const BASE_URL = __ENV.API_BASE_URL || __ENV.BASE_URL || 'http://localhost:3000';
 
 // The wrong-key request intentionally returns 403 — mark it (and the normal
 // 200/201) as "expected" so it is NOT counted in the http_req_failed metric.
