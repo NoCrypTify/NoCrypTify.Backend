@@ -124,14 +124,15 @@ jobs:
           command: |
             ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
               if [ \"$STAGING_COLOUR\" = \"green\" ]; then
-                  echo 'set $backend_production http://backend-green:3000;\nset $backend_staging http://backend-blue:3000;\n' > ./secret-notes/nginx/targets/backend.conf
+                  echo -e 'set $backend_production http://backend-green:3000;\nset $backend_staging http://backend-blue:3000;\n' > ./secret-notes/nginx/targets/backend.conf
                   echo 'green' > ./secret-notes/backend-prod.colour
               else
-                  echo 'set $backend_production http://backend-blue:3000;\nset $backend_staging http://backend-green:3000;\n' > ./secret-notes/nginx/targets/backend.conf
+                  echo -e 'set $backend_production http://backend-blue:3000;\nset $backend_staging http://backend-green:3000;\n' > ./secret-notes/nginx/targets/backend.conf
                   echo 'blue' > ./secret-notes/backend-prod.colour
               fi
               docker exec proxy nginx -s reload
             "
+      - notify_on_fail
 
 workflows:
 
