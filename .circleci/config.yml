@@ -221,7 +221,7 @@ workflows:
             - sonar
             - node/test
       - prepare-deployment:
-          requries:
+          requires:
             - docker/publish
       - deploy-staging:
           requires:
