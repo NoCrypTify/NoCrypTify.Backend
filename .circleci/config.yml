@@ -66,7 +66,6 @@ jobs:
               docker pull $DOCKER_LOGIN/nocryptify_backend
               docker rm -f "backend-$STAGING_COLOUR" >/dev/null 2>&1 || true
             "
-
       - run:
           name: Run database migrations
           command: |
@@ -78,7 +77,6 @@ jobs:
             #   npm run migrate
             # "
             echo "TODO for later"
-
       - run:
           name: Start new Container
           command: |
@@ -134,6 +132,16 @@ jobs:
             "
       - notify_on_fail
 
+  notify:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: Notify on success
+          command: |
+            curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"✅ **${CIRCLE_JOB}: ${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** on branch **${CIRCLE_BRANCH}** finished successfully!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
+
+
 workflows:
 
   default:
@@ -151,6 +159,12 @@ workflows:
           image: $DOCKER_LOGIN/nocryptify_backend
           post-steps:
             - notify_on_fail
+      - notify:
+          requires:
+            - snyk
+            - sonar
+            - node/test
+            - docker/publish
 
   deploy:
     when:
@@ -180,15 +194,6 @@ workflows:
       - deploy-production:
           requires:
             - smoke-tests
-
-  only-deploy:
-    when:
-      equal: ["deploy/tmp", << pipeline.git.branch >>]
-    jobs:
-      - deploy-staging
-      - smoke-tests:
+      - notify:
           requires:
-            - deploy-staging
-      - deploy-production:
-          requires:
-            - smoke-tests
+            - deploy-production
