@@ -186,6 +186,7 @@ workflows:
       - sonar
       - node/test:
           test-results-for: jest
+          test-coverage-path: coverage
           post-steps:
             - notify_on_fail
       - docker/publish:
@@ -208,6 +209,7 @@ workflows:
       - sonar
       - node/test:
           test-results-for: jest
+          test-coverage-path: coverage
           post-steps:
             - notify_on_fail
       - docker/publish:

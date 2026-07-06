@@ -12,4 +12,13 @@ module.exports = {
       'jest-junit'
     ],
   ],
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageProvider: 'v8',
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/**/index.ts',
+  ],
+  coverageReporters: ['text', 'lcov', 'html'],
 };
