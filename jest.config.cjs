@@ -10,4 +10,12 @@ module.exports = {
     'default',
     ['jest-junit', { outputDirectory: 'coverage', outputName: 'junit.xml' }],
   ],
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageProvider: 'v8',
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/**/index.ts',
+  ],
 };
