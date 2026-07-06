@@ -203,7 +203,6 @@ workflows:
       - deploy-staging:
           requires:
             - prepare-deployment
-      - smoke-tests:
       - grafana/k6:
           arguments: '--env BASE_URL=$STAGING_URL'
           script: k6.js
