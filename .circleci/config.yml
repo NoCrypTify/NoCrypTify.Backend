@@ -108,12 +108,10 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
-      - get_deployment_colours
       - run:
           name: E2E + performance against staging
           command: |
-            echo "${PRODUCTION_COLOUR}"
-            echo "${STAGING_COLOUR}"
+            echo "Run Tests"
       - notify_on_fail
 
   deploy-production:
@@ -123,10 +121,16 @@ jobs:
       - get_deployment_colours
       - run:
           name: Switch blue/green
-          # TODO
           command: |
             ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
-              exit 1
+              if [ \"$STAGING_COLOUR\" = \"green\" ]; then
+                  echo 'set $backend_production http://backend-green:3000;\nset $backend_staging http://backend-blue:3000;\n' > ./secret-notes/nginx/targets/backend.conf
+                  echo 'green' > ./secret-notes/backend-prod.colour
+              else
+                  echo 'set $backend_production http://backend-blue:3000;\nset $backend_staging http://backend-green:3000;\n' > ./secret-notes/nginx/targets/backend.conf
+                  echo 'blue' > ./secret-notes/backend-prod.colour
+              fi
+              docker exec proxy nginx -s reload
             "
 
 workflows:
