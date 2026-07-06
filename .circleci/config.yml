@@ -161,10 +161,6 @@ jobs:
           name: Change Deployment Status to fail
           command: circleci run release update --status=FAILED --failure-reason="Switching Deployments failed"
           when: on_fail
-      - run:
-          name: Change Deployment Status to success
-          command: circleci run release update --status=SUCCESS
-          when: on_success
       - notify_on_fail
 
   notify:
@@ -175,6 +171,9 @@ jobs:
           name: Notify on success
           command: |
             curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"✅ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** on branch **${CIRCLE_BRANCH}** finished successfully!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
+      - run:
+          name: Change Deployment Status to success
+          command: circleci run release update --status=SUCCESS
 
 
 workflows:
