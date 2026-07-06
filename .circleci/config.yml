@@ -13,7 +13,6 @@ commands:
           when: on_fail
           command: |
             curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"<@&1522971188668928080> ❌ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** failed in job **${CIRCLE_JOB}** on branch **${CIRCLE_BRANCH}**!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
-
   get_deployment_colours:
     steps:
       - run:
@@ -27,7 +26,6 @@ commands:
                 echo 'export PRODUCTION_COLOUR="blue"' >> $BASH_ENV
                 echo 'export STAGING_COLOUR="green"' >> $BASH_ENV
             fi
-
 
 jobs:
   snyk:
@@ -51,7 +49,7 @@ jobs:
           command: sonar-scanner
       - notify_on_fail
 
-  deploy-staging:
+  prepare-deployment:
     docker:
       - image: cimg/base:stable
     steps:
@@ -59,6 +57,13 @@ jobs:
           fingerprints:
             - SHA256:gg5cFYIlLTQ/DhKaMqSqyK2LqUv0lCo5oBlLhjSBW/4
       - get_deployment_colours
+      - run:
+          name: Plan deployment
+          command: |
+            circleci run release plan \
+              --environment-name=aws \
+              --component-name=backend \
+              --target-version="1.0.${CIRCLE_BUILD_NUM}-${CIRCLE_SHA1:0:7}"
       - run:
           name: Prepare new docker image
           command: |
@@ -77,6 +82,20 @@ jobs:
             #   npm run migrate
             # "
             echo "TODO for later"
+      - run:
+          name: Change Deployment Status: cancelled
+          command: circleci run release update --status=CANCELED
+          when: on_fail
+
+  deploy-staging:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - SHA256:gg5cFYIlLTQ/DhKaMqSqyK2LqUv0lCo5oBlLhjSBW/4
+      - get_deployment_colours
+      - run: circleci run release update --status=running
       - run:
           name: Start new Container
           command: |
@@ -100,6 +119,10 @@ jobs:
                 exit 1
               fi
             "
+      - run:
+          name: Change Deployment Status: fail
+          command: circleci run release update --status=FAILED --failure-reason="Container failed to start"
+          when: on_fail
       - notify_on_fail
 
   smoke-tests:
@@ -107,9 +130,13 @@ jobs:
       - image: cimg/base:stable
     steps:
       - run:
-          name: E2E + performance against staging
+          name: Performance Tests against staging
           command: |
             echo "Run Tests"
+      - run:
+          name: Change Deployment Status: fail
+          command: circleci run release update --status=FAILED --failure-reason="Performance Tests failed"
+          when: on_fail
       - notify_on_fail
 
   deploy-production:
@@ -130,6 +157,14 @@ jobs:
               fi
               docker exec proxy nginx -s reload
             "
+      - run:
+          name: Change Deployment Status: fail
+          command: circleci run release update --status=FAILED --failure-reason="Switching Deployments failed"
+          when: on_fail
+      - run:
+          name: Change Deployment Status: success
+          command: circleci run release update --status=SUCCESS
+          when: on_success
       - notify_on_fail
 
   notify:
@@ -139,7 +174,7 @@ jobs:
       - run:
           name: Notify on success
           command: |
-            curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"✅ **${CIRCLE_JOB}: ${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** on branch **${CIRCLE_BRANCH}** finished successfully!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
+            curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"✅ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** on branch **${CIRCLE_BRANCH}** finished successfully!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
 
 
 workflows:
@@ -185,9 +220,12 @@ workflows:
             - snyk
             - sonar
             - node/test
+      - prepare-deployment:
+          requries:
+            - docker/publish
       - deploy-staging:
           requires:
-            - docker/publish
+            - prepare-deployment
       - smoke-tests:
           requires:
             - deploy-staging
