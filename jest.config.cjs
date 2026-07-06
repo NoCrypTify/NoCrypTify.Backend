@@ -20,5 +20,4 @@ module.exports = {
     '!src/**/*.d.ts',
     '!src/**/index.ts',
   ],
-  coverageReporters: ['text', 'lcov', 'html'],
 };
