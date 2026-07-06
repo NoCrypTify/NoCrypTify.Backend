@@ -2,3 +2,7 @@ node_modules/
 dist/
 .env
 *.log
+# Test output (jest coverage + junit reporter)
+coverage/
+# k6 performance-test output
+k6-summary.json
