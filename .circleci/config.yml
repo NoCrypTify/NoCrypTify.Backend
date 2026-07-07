@@ -224,11 +224,3 @@ workflows:
       - deploy-production:
           requires:
             - grafana/k6
-
-  load-test:
-    when:
-      equal: ["tmp/load-test", << pipeline.git.branch >>]
-    jobs:
-      - grafana/k6:
-          arguments: '--env BASE_URL=${STAGING_URL}'
-          script: k6/notes-load-test.js
