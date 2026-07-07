@@ -105,6 +105,6 @@ export function handleSummary(data) {
       null,
       2,
     ),
-    'k6-summary.json': JSON.stringify(data, null, 2),
+    '/tmp/artifacts/k6-summary.json': JSON.stringify(data, null, 2),
   };
 }
