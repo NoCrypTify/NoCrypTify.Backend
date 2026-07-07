@@ -138,14 +138,13 @@ jobs:
               docker exec proxy nginx -s reload
             "
       - setup_remote_docker
-      - docker/pull:
-          images: $DOCKER_LOGIN/nocryptify_backend:latest
       - run:
           name: Tag image as stable
-          command: docker tag "$DOCKER_LOGIN/nocryptify_backend:latest" "$DOCKER_LOGIN/nocryptify_backend:stable"
-      - docker/push:
-          image: $DOCKER_LOGIN/nocryptify_backend
-          tag: stable
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin
+            docker pull "$DOCKER_LOGIN/nocryptify_backend:latest"
+            docker tag "$DOCKER_LOGIN/nocryptify_backend:latest" "$DOCKER_LOGIN/nocryptify_backend:stable"
+            docker push "$DOCKER_LOGIN/nocryptify_backend:stable"
       - run:
           name: Change Deployment Status to success
           command: circleci run release update --status=SUCCESS
