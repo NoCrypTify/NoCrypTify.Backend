@@ -170,12 +170,12 @@ workflows:
           image: $DOCKER_LOGIN/nocryptify_backend
           post-steps:
             - notify_on_fail
-      - notify:
-          requires:
-            - snyk
-            - sonar
-            - node/test
-            - docker/publish
+            - run:
+                name: Notify on success
+                command: |
+                    curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"✅ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** on branch **${CIRCLE_BRANCH}** finished successfully!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
+                when: on_success
+
 
   deploy:
     when:
