@@ -117,8 +117,6 @@ jobs:
                 docker rm -f \"backend-$STAGING_COLOUR\"
                 exit 1
               fi
-              echo "fail on purpose"
-              exit 1
             "
       - run:
           name: Change Deployment Status to fail
