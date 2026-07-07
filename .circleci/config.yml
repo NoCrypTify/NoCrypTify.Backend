@@ -4,6 +4,7 @@ orbs:
   snyk: snyk/snyk@2.3.0
   node: circleci/node@7.2.1
   docker: circleci/docker@4.0.1
+  grafana: grafana/k6@1.1.3
 
 commands:
   notify_on_fail:
@@ -123,18 +124,6 @@ jobs:
           when: on_fail
       - deployment_fail_handler
 
-  load-test:
-    docker:
-      - image: grafana/k6:latest
-    steps:
-      - checkout
-      - run:
-          name: Run k6 load test
-          command: k6 run load-tests/k6-script.js
-          environment:
-            BASE_URL: ${STAGING_URL}
-      - deployment_fail_handler
-
   deploy-production:
     docker:
       - image: cimg/base:stable
@@ -162,6 +151,12 @@ jobs:
           command: |
             curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"✅ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** on branch **${CIRCLE_BRANCH}** finished successfully!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
           when: on_success
+      - deployment_fail_handler
+
+  k6-fail-handler:
+    docker:
+      - image: cimg/base:stable
+    steps:
       - deployment_fail_handler
 
 workflows:
@@ -214,9 +209,22 @@ workflows:
       - deploy-staging:
           requires:
             - prepare-deployment
-      - load-test:
+      - grafana/k6:
+          arguments: '--env BASE_URL=${STAGING_URL}'
+          script: k6/notes-load-test.js
           requires:
             - deploy-staging
+     - k6_fail_handler:
+          requires:
+            - grafana/k6: failed
       - deploy-production:
           requires:
-            - load-test
+            - grafana/k6
+
+  load-test:
+    when:
+      equal: ["tmp/load-test", << pipeline.git.branch >>]
+    jobs:
+      - grafana/k6:
+          arguments: '--env BASE_URL=${STAGING_URL}'
+          script: k6/notes-load-test.js
