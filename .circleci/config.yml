@@ -214,7 +214,7 @@ workflows:
           script: k6/notes-load-test.js
           requires:
             - deploy-staging
-     - k6_fail_handler:
+      - k6_fail_handler:
           requires:
             - grafana/k6: failed
       - deploy-production:
