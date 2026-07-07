@@ -2,19 +2,6 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate } from 'k6/metrics';
 
-// Performance test for the Secret Notes REST API (Feature A + B under load).
-// In CD this runs against the freshly-deployed *inactive* blue/green backend
-// before traffic is switched. A threshold breach fails the stage and blocks
-// the switch.
-//
-//   API_BASE_URL   base URL of the API (injected via env, no trailing slash).
-//                  container (blue/green): http://<ec2-host>:3001
-//                  via nginx (staging):    http://<host>/staging/api
-//                  local dev:              http://localhost:3000  (default)
-//
-// Run:  k6 run -e API_BASE_URL=http://host:3001 k6/notes-load-test.js
-
-// Accept API_BASE_URL (local / npm script) or BASE_URL (CircleCI grafana/k6 orb).
 const BASE_URL = __ENV.API_BASE_URL || __ENV.BASE_URL || 'http://localhost:3000';
 
 // The wrong-key request intentionally returns 403 — mark it (and the normal
@@ -102,17 +89,22 @@ export default function () {
 }
 
 export function handleSummary(data) {
+  const duration = data.metrics.http_req_duration;
+  const failed = data.metrics.http_req_failed;
+  const checks = data.metrics.checks;
+  const wrongKey = data.metrics.wrong_key_not_rejected;
+
   return {
     stdout: JSON.stringify(
       {
-        p95_ms: data.metrics.http_req_duration?.values?.['p(95)'],
-        http_req_failed: data.metrics.http_req_failed?.values?.rate,
-        checks_passed: data.metrics.checks?.values?.rate,
-        wrong_key_not_rejected: data.metrics.wrong_key_not_rejected?.values?.rate,
+        p95_ms: duration && duration.values && duration.values['p(95)'],
+        http_req_failed: failed && failed.values && failed.values.rate,
+        checks_passed: checks && checks.values && checks.values.rate,
+        wrong_key_not_rejected: wrongKey && wrongKey.values && wrongKey.values.rate,
       },
       null,
       2,
     ),
-    'k6-summary.json': JSON.stringify(data, null, 2),
+    '/tmp/artifacts/k6-summary.json': JSON.stringify(data, null, 2),
   };
 }
