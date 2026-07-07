@@ -118,10 +118,6 @@ jobs:
                 exit 1
               fi
             "
-      - run:
-          name: Change Deployment Status to fail
-          command: circleci run release update --status=FAILED --failure-reason="Container failed to start"
-          when: on_fail
       - deployment_fail_handler
 
   deploy-production:
