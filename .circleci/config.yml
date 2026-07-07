@@ -18,13 +18,6 @@ commands:
     steps:
       - aws_deploy_setup
       - run:
-          name: Stop Staging Container
-          command: |
-            ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
-              docker rm -f "backend-$STAGING_COLOUR" >/dev/null 2>&1 || true
-            "
-          when: on_fail
-      - run:
           name: Change Deployment Status to fail if failed
           command: circleci run release update --status=FAILED --failure-reason="${CIRCLE_JOB} failed"
           when: on_fail
@@ -184,12 +177,6 @@ jobs:
       - image: cimg/base:stable
     steps:
       - aws_deploy_setup
-      - run:
-          name: Stop Staging Container
-          command: |
-            ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
-              docker rm -f "backend-$STAGING_COLOUR" >/dev/null 2>&1 || true
-            "
       - run:
           name: Change Deployment Status to fail if failed
           command: circleci run release update --status=FAILED --failure-reason="${CIRCLE_JOB} failed"
