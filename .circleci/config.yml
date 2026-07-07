@@ -212,8 +212,8 @@ workflows:
       - grafana/k6:
           pre-steps:
             - run:
-              name: Create artifacts directory
-              command: mkdir -p /tmp/artifacts
+                name: Create artifacts directory
+                command: mkdir -p /tmp/artifacts
           arguments: '--env BASE_URL=${STAGING_URL}'
           script: k6/notes-load-test.js
           requires:
