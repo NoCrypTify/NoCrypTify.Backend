@@ -114,7 +114,6 @@ jobs:
               if [ \$(docker inspect -f '{{.State.Health.Status}}' \"backend-$STAGING_COLOUR\") != \"healthy\" ]; then
                 echo \"Health check failed\" >&2
                 docker logs \"backend-$STAGING_COLOUR\"
-                docker rm -f \"backend-$STAGING_COLOUR\"
                 exit 1
               fi
             "
@@ -138,6 +137,12 @@ jobs:
               fi
               docker exec proxy nginx -s reload
             "
+      - setup_remote_docker
+      - docker/pull:
+          images: $DOCKER_LOGIN/nocryptify_backend:latest
+      - docker/push:
+          image: $DOCKER_LOGIN/nocryptify_backend
+          tag: stable
       - run:
           name: Change Deployment Status to success
           command: circleci run release update --status=SUCCESS
@@ -153,7 +158,20 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
-      - deployment_fail_handler
+      - aws_deploy_setup
+      - run:
+          name: Stop Staging Container
+          command: |
+            ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOYMENT_HOST "
+              docker rm -f "backend-$STAGING_COLOUR" >/dev/null 2>&1 || true
+            "
+      - run:
+          name: Change Deployment Status to fail if failed
+          command: circleci run release update --status=FAILED --failure-reason="${CIRCLE_JOB} failed"
+      - run:
+          name: Notify on failure
+          command: |
+            curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"<@&1522971188668928080> ❌ **${CIRCLE_PROJECT_REPONAME} #${CIRCLE_BUILD_NUM}** failed in job **${CIRCLE_JOB}** on branch **${CIRCLE_BRANCH}**!\\nDetails: ${CIRCLE_BUILD_URL}\"}" "$DISCORD_WEBHOOK"
 
 workflows:
   default:
