@@ -114,7 +114,6 @@ jobs:
               if [ \$(docker inspect -f '{{.State.Health.Status}}' \"backend-$STAGING_COLOUR\") != \"healthy\" ]; then
                 echo \"Health check failed\" >&2
                 docker logs \"backend-$STAGING_COLOUR\"
-                docker rm -f \"backend-$STAGING_COLOUR\"
                 exit 1
               fi
             "
@@ -138,6 +137,12 @@ jobs:
               fi
               docker exec proxy nginx -s reload
             "
+      - setup_remote_docker
+      - docker/pull:
+          images: $DOCKER_LOGIN/nocryptify_backend:latest
+      - docker/push:
+          image: $DOCKER_LOGIN/nocryptify_backend
+          tag: stable
       - run:
           name: Change Deployment Status to success
           command: circleci run release update --status=SUCCESS
