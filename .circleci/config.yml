@@ -140,6 +140,9 @@ jobs:
       - setup_remote_docker
       - docker/pull:
           images: $DOCKER_LOGIN/nocryptify_backend:latest
+      - run:
+          name: Tag image as stable
+          command: docker tag "$DOCKER_LOGIN/nocryptify_backend:latest" "$DOCKER_LOGIN/nocryptify_backend:stable"
       - docker/push:
           image: $DOCKER_LOGIN/nocryptify_backend
           tag: stable
