@@ -57,6 +57,9 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: fail
+          command: exit 1
+      - run:
           name: SonarQube scan
           command: sonar-scanner
       - notify_on_fail
